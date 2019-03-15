@@ -21,12 +21,13 @@ namespace se
 
 		void* Array::addElementRaw(uint64_t& id)
 		{
+			id = nextID_++;
+
 			if (atEndOfBuffer())
 			{
 				return nullptr;
 			}
 
-			id = nextID_++;
 			memcpy(back_, &id, sizeof(uint64_t));
 			back_ += sizeof(uint64_t);
 

@@ -28,11 +28,10 @@ namespace se
 		private:
 			char* front_;
 			char* back_;
-			uint64_t nextID_{ 1 };
+			uint64_t nextID_{ 0 };
 			uint64_t elementSizeBytes_;
 			uint64_t bufferSizeBytes_;
 		};
 	}
 }
-
 #endif
