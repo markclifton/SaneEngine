@@ -3,7 +3,7 @@
 #define _MyLibrary_DLLDEFINES_H_
 
 #if defined (_WIN32)
-#if defined(MyLibrary_EXPORTS)
+#if defined(SaneEngine_EXPORTS)
 #define  MYLIB_EXPORT __declspec(dllexport)
 #else
 #define  MYLIB_EXPORT __declspec(dllimport)

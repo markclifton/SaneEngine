@@ -1,11 +1,13 @@
 #include "se/utils/array.h"
 
-#include <iostream>b
-
 namespace se
 {
 	namespace utils
 	{
+		Array::Array()
+		{
+		}
+
 		Array::Array(uint64_t bufferSizeBytes, uint64_t elementSizeBytes)
 			: front_(new char[bufferSizeBytes])
 			, back_(front_)
@@ -37,12 +39,12 @@ namespace se
 			return address;
 		}
 
-		void Array::addElement(uint64_t& id, void* element)
+		void Array::addElement(void* element, uint64_t& id)
 		{
 			void* address = addElementRaw(id);
 			if (address)
 			{
-				char* newElement = new(address)char(elementSizeBytes_);
+				char* newElement = new(address)char[elementSizeBytes_];
 				memcpy(newElement, element, elementSizeBytes_);
 			}
 		}
@@ -61,6 +63,11 @@ namespace se
 
 				currentElement += elementSizeBytes_ + sizeof(uint64_t);
 			}
+		}
+
+		void Array::clear()
+		{
+			back_ = front_;
 		}
 
 		bool Array::atEndOfBuffer()
@@ -83,16 +90,17 @@ namespace se
 
 				currentElement += elementSizeBytes_ + sizeof(uint64_t);
 			}
+			return nullptr;
 		}
 
-		void Array::printElements()
+		uint64_t Array::count()
 		{
-			char* currentElement = front_;
-			while (currentElement < back_)
-			{
-				std::cout << "id: " << *(uint64_t*)(currentElement) << "\n";
-				currentElement += elementSizeBytes_ + sizeof(uint64_t);
-			}
+			return (back_ - front_) / (elementSizeBytes_ + sizeof(uint64_t));
+		}
+
+		void* Array::getAtIndex(uint64_t index)
+		{
+			return front_ + (sizeof(uint64_t) + elementSizeBytes_) * index + sizeof(uint64_t);
 		}
 	}
 }
