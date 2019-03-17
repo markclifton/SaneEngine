@@ -1,13 +1,9 @@
 #include "se/utils/array.h"
-
+#include <stdio.h>
 namespace se
 {
 	namespace utils
 	{
-		Array::Array()
-		{
-		}
-
 		Array::Array(uint64_t bufferSizeBytes, uint64_t elementSizeBytes)
 			: front_(new char[bufferSizeBytes])
 			, back_(front_)
@@ -25,8 +21,9 @@ namespace se
 		{
 			id = nextID_++;
 
-			if (atEndOfBuffer())
+			if (full())
 			{
+				printf("End of buffer\n");
 				return nullptr;
 			}
 
@@ -56,28 +53,16 @@ namespace se
 			{
 				if ((uint64_t)*currentElement == id)
 				{
-					back_ -= (elementSizeBytes_ + sizeof(uint64_t));
-					memcpy(currentElement, back_, elementSizeBytes_ + sizeof(uint64_t));
+					back_ -= stepSize();
+					memcpy(currentElement, back_, stepSize());
 					return;
 				}
 
-				currentElement += elementSizeBytes_ + sizeof(uint64_t);
+				currentElement += stepSize();
 			}
 		}
 
-		void Array::clear()
-		{
-			back_ = front_;
-		}
-
-		bool Array::atEndOfBuffer()
-		{
-			char* nextElement = back_;
-			nextElement += elementSizeBytes_ + sizeof(uint64_t);
-			return nextElement > front_ + bufferSizeBytes_;
-		}
-
-		char* Array::getElement(uint64_t id)
+		void* Array::getElement(uint64_t id)
 		{
 			char* currentElement = front_;
 			while (currentElement < back_)
@@ -88,19 +73,34 @@ namespace se
 					return currentElement;
 				}
 
-				currentElement += elementSizeBytes_ + sizeof(uint64_t);
+				currentElement += stepSize();
 			}
 			return nullptr;
 		}
 
-		uint64_t Array::count()
+		void Array::clear()
 		{
-			return (back_ - front_) / (elementSizeBytes_ + sizeof(uint64_t));
+			back_ = front_;
 		}
 
-		void* Array::getAtIndex(uint64_t index)
+		bool Array::full()
 		{
-			return front_ + (sizeof(uint64_t) + elementSizeBytes_) * index + sizeof(uint64_t);
+			return back_ >= front_ + bufferSizeBytes_;
+		}
+
+		uint64_t Array::count()
+		{
+			return (back_ - front_) / stepSize();
+		}
+
+		void* Array::operator[](uint64_t index)
+		{
+			return front_ + stepSize() * index + sizeof(uint64_t);
+		}
+
+		uint64_t Array::stepSize()
+		{
+			return sizeof(uint64_t) + elementSizeBytes_;
 		}
 	}
 }
