@@ -9,7 +9,6 @@
 int main()
 {
 	se::ecs::TestSystem testSystem;
-
 	se::utils::MemoryManager manager;
 	uint64_t id = manager.create(1000, sizeof(se::ecs::TestComponent));
 	auto testCompArray = manager.get(id);
@@ -29,10 +28,13 @@ int main()
 	}
 
 	std::cout << "Count: " << testCompArray->count() << std::endl;
-	for (int i = 0; i < testCompArray->count(); i++)
+	
+	auto current = testCompArray->begin();
+	while(current != testCompArray->end())
 	{
-		auto temp = (se::ecs::TestComponent*)(*testCompArray)[i];
+		auto temp = (se::ecs::TestComponent*)(*current);
 		std::cout << "TestComponent: " << temp << " " << temp->x << std::endl;
+		current++;
 	}
 
 	system("pause");
