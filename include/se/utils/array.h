@@ -55,7 +55,7 @@ namespace se
 			uint64_t elementSizeBytes_;
 			uint64_t bufferSizeBytes_;
 
-			uint64_t stepSize();
+			uint64_t stepSizeBytes_;
 		};
 	}
 }

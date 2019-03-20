@@ -21,7 +21,7 @@ namespace se
 		{
 			if (current_ != *a_->end())
 			{
-				current_ += a_->stepSize();
+				current_ += a_->stepSizeBytes_;
 			}
 			return *this;
 		}
@@ -53,6 +53,7 @@ namespace se
 			, back_(front_)
 			, elementSizeBytes_(elementSizeBytes)
 			, bufferSizeBytes_(bufferSizeBytes)
+			, stepSizeBytes_(elementSizeBytes + sizeof(uint64_t))
 		{
 		}
 
@@ -97,12 +98,12 @@ namespace se
 			{
 				if ((uint64_t)*currentElement == id)
 				{
-					back_ -= stepSize();
-					memcpy(currentElement, back_, stepSize());
+					back_ -= stepSizeBytes_;
+					memcpy(currentElement, back_, stepSizeBytes_);
 					return;
 				}
 
-				currentElement += stepSize();
+				currentElement += stepSizeBytes_;
 			}
 		}
 
@@ -117,7 +118,7 @@ namespace se
 					return currentElement;
 				}
 
-				currentElement += stepSize();
+				currentElement += stepSizeBytes_;
 			}
 			return nullptr;
 		}
@@ -134,12 +135,12 @@ namespace se
 
 		uint64_t Array::count()
 		{
-			return (back_ - front_) / stepSize();
+			return (back_ - front_) / stepSizeBytes_;
 		}
 
 		void* Array::operator[](uint64_t index)
 		{
-			return front_ + stepSize() * index + sizeof(uint64_t);
+			return front_ + stepSizeBytes_ * index + sizeof(uint64_t);
 		}
 
 		Array::ArrayIterator Array::begin()
@@ -150,11 +151,6 @@ namespace se
 		Array::ArrayIterator Array::end()
 		{
 			return { back_ + sizeof(uint64_t), this };
-		}
-
-		uint64_t Array::stepSize()
-		{
-			return sizeof(uint64_t) + elementSizeBytes_;
 		}
 	}
 }
