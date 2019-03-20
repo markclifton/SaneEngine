@@ -4,6 +4,50 @@ namespace se
 {
 	namespace utils
 	{
+		Array::ArrayIterator::ArrayIterator(char* pointer, Array* arr) 
+			: current_(pointer), a_(arr) 
+		{}
+
+		Array::ArrayIterator::ArrayIterator(const Array::ArrayIterator& mit)
+		{
+			if (this != &mit)
+			{
+				current_ = mit.current_;
+				a_ = mit.a_;
+			}
+		}
+
+		Array::ArrayIterator& Array::ArrayIterator::operator++()
+		{
+			if (current_ != *a_->end())
+			{
+				current_ += a_->stepSize();
+			}
+			return *this;
+		}
+
+		Array::ArrayIterator Array::ArrayIterator::operator++(int) 
+		{ 
+			Array::ArrayIterator tmp(*this); 
+			operator++(); 
+			return tmp; 
+		}
+
+		bool Array::ArrayIterator::operator==(const Array::ArrayIterator& rhs) const 
+		{ 
+			return current_ == rhs.current_; 
+		}
+
+		bool Array::ArrayIterator::operator!=(const Array::ArrayIterator& rhs) const 
+		{ 
+			return current_ != rhs.current_; 
+		}
+
+		char* Array::ArrayIterator::operator*() 
+		{ 
+			return current_; 
+		}
+
 		Array::Array(uint64_t bufferSizeBytes, uint64_t elementSizeBytes)
 			: front_(new char[bufferSizeBytes])
 			, back_(front_)
@@ -17,7 +61,7 @@ namespace se
 			delete[] front_;
 		}
 
-		void* Array::addElementRaw(uint64_t& id)
+		void* Array::add(uint64_t& id)
 		{
 			id = nextID_++;
 
@@ -36,9 +80,9 @@ namespace se
 			return address;
 		}
 
-		void Array::addElement(void* element, uint64_t& id)
+		void Array::add(void* element, uint64_t& id)
 		{
-			void* address = addElementRaw(id);
+			void* address = add(id);
 			if (address)
 			{
 				char* newElement = new(address)char[elementSizeBytes_];
@@ -46,7 +90,7 @@ namespace se
 			}
 		}
 
-		void Array::removeElement(uint64_t id)
+		void Array::remove(uint64_t id)
 		{
 			char* currentElement = front_;
 			while (currentElement < back_)
@@ -62,7 +106,7 @@ namespace se
 			}
 		}
 
-		void* Array::getElement(uint64_t id)
+		void* Array::get(uint64_t id)
 		{
 			char* currentElement = front_;
 			while (currentElement < back_)
@@ -96,6 +140,16 @@ namespace se
 		void* Array::operator[](uint64_t index)
 		{
 			return front_ + stepSize() * index + sizeof(uint64_t);
+		}
+
+		Array::ArrayIterator Array::begin()
+		{
+			return { front_ + sizeof(uint64_t), this };
+		}
+
+		Array::ArrayIterator Array::end()
+		{
+			return { back_ - elementSizeBytes_, this };
 		}
 
 		uint64_t Array::stepSize()

@@ -17,7 +17,7 @@ int main()
 	for (int i = 0; i < 10; i++)
 	{
 		uint64_t i1;
-		if (void* address = testCompArray->addElementRaw(i1))
+		if (void* address = testCompArray->add(i1))
 		{
 			new(address) se::ecs::TestComponent();
 		}
