@@ -149,7 +149,7 @@ namespace se
 
 		Array::ArrayIterator Array::end()
 		{
-			return { back_ - elementSizeBytes_, this };
+			return { back_ + sizeof(uint64_t), this };
 		}
 
 		uint64_t Array::stepSize()
