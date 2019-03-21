@@ -19,7 +19,7 @@ namespace se
 
 		Array::ArrayIterator& Array::ArrayIterator::operator++()
 		{
-			if (current_ != *a_->end())
+			if (current_ <= a_->back_)
 			{
 				current_ += a_->stepSizeBytes_;
 			}
@@ -35,17 +35,17 @@ namespace se
 
 		bool Array::ArrayIterator::operator==(const Array::ArrayIterator& rhs) const 
 		{ 
-			return current_ == rhs.current_; 
+			return current_ == rhs.current_;
 		}
 
 		bool Array::ArrayIterator::operator!=(const Array::ArrayIterator& rhs) const 
 		{ 
-			return current_ != rhs.current_; 
+			return !(*this == rhs);
 		}
 
 		char* Array::ArrayIterator::operator*() 
 		{ 
-			return current_; 
+			return (current_ = (current_ < a_->back_ ? current_ : a_->back_));
 		}
 
 		Array::Array(uint64_t bufferSizeBytes, uint64_t elementSizeBytes)

@@ -16,7 +16,7 @@ namespace se
 		{
 			friend class ArrayIterator;
 		public:
-			class MYLIB_EXPORT ArrayIterator : public std::iterator<std::input_iterator_tag, char*>
+			class MYLIB_EXPORT ArrayIterator //: public std::iterator<std::input_iterator_tag, char*> //TODO: Hook up this completely
 			{
 			public:
 				ArrayIterator(char* pointer, Array* arr);
