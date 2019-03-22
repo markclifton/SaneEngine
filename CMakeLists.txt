@@ -6,10 +6,13 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 file(GLOB SOURCEFILES
 	src/**/*.cpp
+	src/*.cpp
 )
 
 file(GLOB HEADERFILES
 	include/se/**/*.h
+	include/se/*.h
+	include/**/*.h
 )
 
 set(BuildDir ${CMAKE_SOURCE_DIR}/build)
@@ -18,6 +21,16 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BuildDir}/${CMAKE_BUILD_TYPE})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BuildDir}/${CMAKE_BUILD_TYPE})
 
 add_library(${PROJECT_NAME} SHARED ${SOURCEFILES} ${HEADERFILES} )
+
+if(WIN32)
+	include_directories(${CMAKE_SOURCE_DIR}/dep/Windows/glfw3.2.1/include)
+	target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/dep/Windows/glfw3.2.1/lib/glfw3.lib)
+
+elseif(APPLE)
+
+else()
+
+endif()
 
 #Test Code
 add_executable(TestProg main.cpp)

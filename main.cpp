@@ -1,43 +1,78 @@
 #include <iostream>
-#include <Windows.h>
 
 #include "se/utils/array.h"
 #include "se/utils/mmanager.h"
 
 #include "se/ecs/testsystem.h"
+#include "se/ecs/ievent.h"
+#include "se/gameinstance.h"
+
+class TestGame : public se::GameInstance
+{
+public:
+	TestGame()
+	{
+		setup();
+	}
+
+	~TestGame()
+	{
+		teardown();
+	}
+
+	void setup() 
+	{
+		//uint64_t id = memMgr_->create(1000, sizeof(se::ecs::TestComponent)); //This should be RAII
+		//auto testCompArray = memMgr_->get(id);
+	};
+	
+	void teardown() 
+	{
+	}
+
+	//se::ecs::TestSystem testSystem;
+};
+
+#include "glad/glad.h"
+#include <GLFW/glfw3.h>
 
 int main()
 {
-	se::ecs::TestSystem testSystem;
-	se::utils::MemoryManager manager;
-	uint64_t id = manager.create(1000, sizeof(se::ecs::TestComponent));
-	auto testCompArray = manager.get(id);
+	TestGame testGame;
 
-	for (int i = 0; i < 10; i++)
+	GLFWwindow* window;
+
+	/* Initialize the library */
+	if (!glfwInit())
+		return -1;
+
+	/* Create a windowed mode window and its OpenGL context */
+	window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+	if (!window)
 	{
-		uint64_t i1;
-		if (void* address = testCompArray->add(i1))
-		{
-			new(address) se::ecs::TestComponent();
-		}
+		glfwTerminate();
+		return -1;
 	}
 
-	for (int i = 0; i < 100; i++)
+	/* Make the window's context current */
+	glfwMakeContextCurrent(window);
+
+	/* Loop until the user closes the window */
+	while (!glfwWindowShouldClose(window))
 	{
-		testSystem.process( { testCompArray } );
+		/* Render here */
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		/* Swap front and back buffers */
+		glfwSwapBuffers(window);
+
+		/* Poll for and process events */
+		glfwPollEvents();
 	}
 
-	std::cout << "Count: " << testCompArray->count() << std::endl;
-	
-	auto current = testCompArray->begin();
-	while(current != testCompArray->end())
-	{
-		auto temp = (se::ecs::TestComponent*)(*current);
-		std::cout << "TestComponent: " << temp << " " << temp->x << std::endl;
-		current++;
-	}
+	glfwTerminate();
 
-	system("pause");
 
+	std::cin.get();
 	return 0;
 }

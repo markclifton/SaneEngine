@@ -8,15 +8,6 @@ namespace se
 			: current_(pointer), a_(arr) 
 		{}
 
-		Array::ArrayIterator::ArrayIterator(const Array::ArrayIterator& mit)
-		{
-			if (this != &mit)
-			{
-				current_ = mit.current_;
-				a_ = mit.a_;
-			}
-		}
-
 		Array::ArrayIterator& Array::ArrayIterator::operator++()
 		{
 			if (current_ <= a_->back_)
