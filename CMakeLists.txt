@@ -12,7 +12,8 @@ file(GLOB SOURCEFILES
 file(GLOB HEADERFILES
 	include/se/**/*.h
 	include/se/*.h
-	include/**/*.h
+	include/KHR/*.h
+	include/gl.h
 )
 
 set(BuildDir ${CMAKE_SOURCE_DIR}/build)
@@ -25,6 +26,9 @@ add_library(${PROJECT_NAME} SHARED ${SOURCEFILES} ${HEADERFILES} )
 if(WIN32)
 	include_directories(${CMAKE_SOURCE_DIR}/dep/Windows/glfw3.2.1/include)
 	target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/dep/Windows/glfw3.2.1/lib/glfw3.lib)
+
+	include_directories(${CMAKE_SOURCE_DIR}/dep/Windows/glm/include)
+	target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/dep/Windows/glm/lib/glm_static.lib)
 
 elseif(APPLE)
 

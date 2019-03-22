@@ -3,7 +3,7 @@
 namespace se
 {
 	GameInstance::GameInstance()
-		: memMgr_(new utils::MemoryManager())
+		: memMgr_(new managers::MemoryManager())
 	{
 	}
 }

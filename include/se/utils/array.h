@@ -20,7 +20,6 @@ namespace se
 			{
 			public:
 				ArrayIterator(char* pointer, Array* arr);
-				ArrayIterator(const ArrayIterator& mit);
 				ArrayIterator& operator++();
 				ArrayIterator operator++(int);
 				bool operator==(const ArrayIterator& rhs) const;

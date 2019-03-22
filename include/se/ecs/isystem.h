@@ -14,7 +14,7 @@ namespace se
 		class MYLIB_EXPORT ISystem
 		{
 		public:
-			virtual void process(std::vector<se::utils::Array*> components) = 0;
+			virtual void process(std::vector<se::utils::Array*> components) = 0; //This needs work...
 		};
 	}
 }

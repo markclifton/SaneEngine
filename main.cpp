@@ -1,12 +1,19 @@
 #include <iostream>
 
 #include "se/utils/array.h"
-#include "se/utils/mmanager.h"
+#include "se/managers/mmanager.h"
 
 #include "se/ecs/testsystem.h"
 #include "se/ecs/ievent.h"
 #include "se/gameinstance.h"
 
+#include "se/managers/windowmanager.h"
+
+#ifdef WIN32
+#include <Windows.h>
+#endif
+
+/*
 class TestGame : public se::GameInstance
 {
 public:
@@ -31,48 +38,16 @@ public:
 	}
 
 	//se::ecs::TestSystem testSystem;
-};
-
-#include "glad/glad.h"
-#include <GLFW/glfw3.h>
+};*/
 
 int main()
 {
-	TestGame testGame;
+#ifdef WIN32
+	FreeConsole();
+#endif
 
-	GLFWwindow* window;
-
-	/* Initialize the library */
-	if (!glfwInit())
-		return -1;
-
-	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-	if (!window)
-	{
-		glfwTerminate();
-		return -1;
-	}
-
-	/* Make the window's context current */
-	glfwMakeContextCurrent(window);
-
-	/* Loop until the user closes the window */
-	while (!glfwWindowShouldClose(window))
-	{
-		/* Render here */
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		/* Swap front and back buffers */
-		glfwSwapBuffers(window);
-
-		/* Poll for and process events */
-		glfwPollEvents();
-	}
-
-	glfwTerminate();
-
-
-	std::cin.get();
+//	TestGame testGame;
+	se::managers::WindowManager wm{ "Hello, World!", 640, 480 };
+	wm.run();
 	return 0;
 }
