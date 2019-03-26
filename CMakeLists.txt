@@ -37,5 +37,5 @@ else()
 endif()
 
 #Test Code
-add_executable(TestProg main.cpp)
+add_executable(TestProg main.cpp ${HEADERFILES})
 target_link_libraries(TestProg ${PROJECT_NAME})

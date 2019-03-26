@@ -3,7 +3,7 @@
 namespace glm{
 namespace detail
 {
-	// Internal class for implementing swizzle operators
+	// se_internal class for implementing swizzle operators
 	template<typename T, int N>
 	struct _swizzle_base0
 	{

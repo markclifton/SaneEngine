@@ -1,13 +1,9 @@
 #include <iostream>
 
-#include "se/utils/array.h"
-#include "se/managers/mmanager.h"
-
-#include "se/ecs/testsystem.h"
-#include "se/ecs/ievent.h"
 #include "se/gameinstance.h"
-
 #include "se/managers/windowmanager.h"
+
+#include "se/ecs/ecs.h"
 
 #ifdef WIN32
 #include <Windows.h>
