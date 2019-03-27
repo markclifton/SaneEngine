@@ -47,9 +47,9 @@ public:
 	TestSystem() = default; 
 	~TestSystem() = default;
 
-	void tick(se::World* world, float deltaTime) override
+	void tick(se::Level* level, float deltaTime) override
 	{
-		world->each<testComp>([&](se::Entity* ent, se::ComponentHandle<testComp> component) {
+		level->each<testComp>([&](se::Entity* ent, se::ComponentHandle<testComp> component) {
 			component->x += 1;
 		});
 	}
@@ -62,20 +62,20 @@ int main()
 #endif
 
 	//Create World
-	auto world = se::World::createWorld();
+	auto level = se::Level::createLevel();
 
 	//Create System
 	auto sys = new TestSystem();
-	world->registerSystem(sys);
+	level->registerSystem(sys);
 	
 	//Create Object
-	auto obj = world->create();
+	auto obj = level->create();
 	obj->assign<testComp>();
 
 	//Update Systems
 	for (int i = 0; i < 100; i++)
 	{
-		world->tick(1.f);
+		level->tick(1.f);
 	}
 
 	//Print Results

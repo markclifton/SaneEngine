@@ -34,7 +34,7 @@ namespace se
 		return std::type_index(typeid(T));
 	}
 
-	class World;
+	class Level;
 	class Entity;
 
 	typedef float DefaultTickData;
@@ -51,7 +51,7 @@ namespace se
 		{
 		public:
 			virtual ~BaseComponentContainer() { }
-			virtual void destroy(World* world) = 0;
+			virtual void destroy(Level* Level) = 0;
 			virtual void removed(Entity* ent) = 0;
 		};
 
@@ -65,18 +65,18 @@ namespace se
 		class EntityComponentIterator
 		{
 		public:
-			EntityComponentIterator(World* world, size_t index, bool bIsEnd, bool bIncludePendingDestroy);
+			EntityComponentIterator(Level* Level, size_t index, bool bIsEnd, bool bIncludePendingDestroy);
 
 			size_t getIndex() const { return index; }
 			bool isEnd() const;
 			bool includePendingDestroy() const { return bIncludePendingDestroy; }
-			World* getWorld() const { return world; }
+			Level* getLevel() const { return level; }
 			Entity* get() const;
 			Entity* operator*() const { return get(); }
 
 			bool operator==(const EntityComponentIterator<Types...>& other) const
 			{
-				if (world != other.world) return false;
+				if (level != other.level) return false;
 				if (isEnd()) return other.isEnd();
 				return index == other.index;
 			}
@@ -86,7 +86,7 @@ namespace se
 		private:
 			bool bIsEnd{ false };
 			size_t index;
-			class se::World* world;
+			class se::Level* level;
 			bool bIncludePendingDestroy;
 		};
 
@@ -125,9 +125,9 @@ namespace se
 	{
 	public:
 		virtual ~EntitySystem() = default;
-		virtual void configure(World* world) {}
-		virtual void unconfigure(World* world) {}
-		virtual void tick(World* world, ECS_TICK_TYPE data) {}
+		virtual void configure(Level* Level) {}
+		virtual void unconfigure(Level* Level) {}
+		virtual void tick(Level* Level, ECS_TICK_TYPE data) {}
 	};
 
 	template<typename T>
@@ -135,7 +135,7 @@ namespace se
 	{
 	public:
 		virtual ~EventSubscriber() = default;
-		virtual void receive(World* world, const T& event) = 0;
+		virtual void receive(Level* Level, const T& event) = 0;
 	};
 
 	namespace Events
@@ -165,10 +165,10 @@ namespace se
 		};
 	}
 
-	class World
+	class Level
 	{
 	public:
-		using WorldAllocator = std::allocator_traits<Allocator>::template rebind_alloc<World>;
+		using LevelAllocator = std::allocator_traits<Allocator>::template rebind_alloc<Level>;
 		using EntityAllocator = std::allocator_traits<Allocator>::template rebind_alloc<Entity>;
 		using SystemAllocator = std::allocator_traits<Allocator>::template rebind_alloc<EntitySystem>;
 		using EntityPtrAllocator = std::allocator_traits<Allocator>::template rebind_alloc<Entity*>;
@@ -176,26 +176,25 @@ namespace se
 		using SubscriberPtrAllocator = std::allocator_traits<Allocator>::template rebind_alloc<se_internal::BaseEventSubscriber*>;
 		using SubscriberPairAllocator = std::allocator_traits<Allocator>::template rebind_alloc<std::pair<const TypeIndex, std::vector<se_internal::BaseEventSubscriber*, SubscriberPtrAllocator>>>;
 
-
-		static World* createWorld(Allocator alloc)
+		static Level* createLevel(Allocator alloc)
 		{
-			WorldAllocator worldAlloc(alloc);
-			World* world = std::allocator_traits<WorldAllocator>::allocate(worldAlloc, 1);
-			std::allocator_traits<WorldAllocator>::construct(worldAlloc, world, alloc);
+			LevelAllocator LevelAlloc(alloc);
+			Level* Level = std::allocator_traits<LevelAllocator>::allocate(LevelAlloc, 1);
+			std::allocator_traits<LevelAllocator>::construct(LevelAlloc, Level, alloc);
 
-			return world;
+			return Level;
 		}
 
-		static World* createWorld() { return createWorld(Allocator()); }
+		static Level* createLevel() { return createLevel(Allocator()); }
 
-		void destroyWorld()
+		void destroyLevel()
 		{
-			WorldAllocator alloc(entAlloc);
-			std::allocator_traits<WorldAllocator>::destroy(alloc, this);
-			std::allocator_traits<WorldAllocator>::deallocate(alloc, this, 1);
+			LevelAllocator alloc(entAlloc);
+			std::allocator_traits<LevelAllocator>::destroy(alloc, this);
+			std::allocator_traits<LevelAllocator>::deallocate(alloc, this, 1);
 		}
 
-		World(Allocator alloc)
+		Level(Allocator alloc)
 			: entAlloc(alloc), systemAlloc(alloc),
 			entities({}, EntityPtrAllocator(alloc)),
 			systems({}, SystemPtrAllocator(alloc)),
@@ -203,7 +202,7 @@ namespace se
 		{
 		}
 
-		~World();
+		~Level();
 
 		Entity* create()
 		{
@@ -340,7 +339,6 @@ namespace se
 		{
 			if (idx >= getCount())
 				return nullptr;
-
 			return entities[idx];
 		}
 
@@ -376,15 +374,14 @@ namespace se
 	class Entity
 	{
 	public:
-		friend class World;
+		friend class Level;
 
 		const static size_t InvalidEntityId = 0;
 
-		Entity(World* world, size_t id) : world(world), id(id) {}
-
+		Entity(Level* Level, size_t id) : Level(Level), id(id) {}
 		~Entity() { removeAll(); }
 
-		World* getWorld() const { return world; }
+		Level* getLevel() const { return Level; }
 
 		template<typename T>
 		bool has() const
@@ -409,7 +406,7 @@ namespace se
 			if (found != components.end())
 			{
 				found->second->removed(this);
-				found->second->destroy(world);
+				found->second->destroy(Level);
 
 				components.erase(found);
 
@@ -424,7 +421,7 @@ namespace se
 			for (auto pair : components)
 			{
 				pair.second->removed(this);
-				pair.second->destroy(world);
+				pair.second->destroy(Level);
 			}
 
 			components.clear();
@@ -449,7 +446,7 @@ namespace se
 
 	private:
 		std::unordered_map<TypeIndex, se_internal::BaseComponentContainer*> components;
-		World* world;
+		Level* Level;
 
 		size_t id;
 		bool bPendingDestroy{ false };
@@ -460,7 +457,7 @@ namespace se
 		class EntityIterator
 		{
 		public:
-			EntityIterator(World* world, size_t index, bool bIsEnd, bool bIncludePendingDestroy);
+			EntityIterator(Level* Level, size_t index, bool bIsEnd, bool bIncludePendingDestroy);
 
 			size_t getIndex() const { return index; }
 
@@ -468,7 +465,7 @@ namespace se
 
 			bool includePendingDestroy() const { return bIncludePendingDestroy; }
 
-			World* getWorld() const { return world; }
+			Level* getLevel() const { return Level; }
 
 			Entity* get() const;
 
@@ -476,7 +473,7 @@ namespace se
 
 			bool operator==(const EntityIterator& other) const
 			{
-				if (world != other.world) return false;
+				if (Level != other.Level) return false;
 				if (isEnd()) return other.isEnd();
 				return index == other.index;
 			}
@@ -488,7 +485,7 @@ namespace se
 		private:
 			bool bIsEnd = false;
 			size_t index;
-			class se::World* world;
+			class se::Level* Level;
 			bool bIncludePendingDestroy;
 		};
 
@@ -522,11 +519,11 @@ namespace se
 			T data;
 
 		protected:
-			virtual void destroy(World* world)
+			virtual void destroy(Level* Level)
 			{
-				using ComponentAllocator = std::allocator_traits<World::EntityAllocator>::template rebind_alloc<ComponentContainer<T>>;
+				using ComponentAllocator = std::allocator_traits<Level::EntityAllocator>::template rebind_alloc<ComponentContainer<T>>;
 
-				ComponentAllocator alloc(world->getPrimaryAllocator());
+				ComponentAllocator alloc(Level->getPrimaryAllocator());
 				std::allocator_traits<ComponentAllocator>::destroy(alloc, this);
 				std::allocator_traits<ComponentAllocator>::deallocate(alloc, this, 1);
 			}
@@ -534,12 +531,12 @@ namespace se
 			virtual void removed(Entity* ent)
 			{
 				auto handle = ComponentHandle<T>(&data);
-				ent->getWorld()->emit<Events::OnComponentRemoved<T>>({ ent, handle });
+				ent->getLevel()->emit<Events::OnComponentRemoved<T>>({ ent, handle });
 			}
 		};
 	}
 
-	inline World::~World()
+	inline Level::~Level()
 	{
 		for (auto* ent : entities)
 		{
@@ -561,10 +558,9 @@ namespace se
 		}
 	}
 
-	inline void World::destroy(Entity* ent, bool immediate)
+	inline void Level::destroy(Entity* ent, bool immediate)
 	{
 		if (ent == nullptr) return;
-
 		if (ent->isPendingDestroy())
 		{
 			if (immediate)
@@ -589,7 +585,7 @@ namespace se
 		}
 	}
 
-	inline bool World::cleanup()
+	inline bool Level::cleanup()
 	{
 		size_t count = 0;
 		entities.erase(std::remove_if(entities.begin(), entities.end(), [&, this](Entity* ent) {
@@ -607,7 +603,7 @@ namespace se
 		return count > 0;
 	}
 
-	inline void World::reset()
+	inline void Level::reset()
 	{
 		for (auto* ent : entities)
 		{
@@ -624,7 +620,7 @@ namespace se
 		lastEntityId = 0;
 	}
 
-	inline void World::all(std::function<void(Entity*)> viewFunc, bool bIncludePendingDestroy)
+	inline void Level::all(std::function<void(Entity*)> viewFunc, bool bIncludePendingDestroy)
 	{
 		for (auto* ent : all(bIncludePendingDestroy))
 		{
@@ -632,14 +628,14 @@ namespace se
 		}
 	}
 
-	inline se_internal::EntityView World::all(bool bIncludePendingDestroy)
+	inline se_internal::EntityView Level::all(bool bIncludePendingDestroy)
 	{
 		se_internal::EntityIterator first(this, 0, false, bIncludePendingDestroy);
 		se_internal::EntityIterator last(this, getCount(), true, bIncludePendingDestroy);
 		return se_internal::EntityView(first, last);
 	}
 
-	inline Entity* World::getById(size_t id) const
+	inline Entity* Level::getById(size_t id) const
 	{
 		if (id == Entity::InvalidEntityId || id > lastEntityId)
 			return nullptr;
@@ -654,7 +650,7 @@ namespace se
 	}
 
 	template<typename... Types>
-	void World::each(typename std::common_type<std::function<void(Entity*, ComponentHandle<Types>...)>>::type viewFunc, bool bIncludePendingDestroy)
+	void Level::each(typename std::common_type<std::function<void(Entity*, ComponentHandle<Types>...)>>::type viewFunc, bool bIncludePendingDestroy)
 	{
 		for (auto* ent : each<Types...>(bIncludePendingDestroy))
 		{
@@ -665,7 +661,7 @@ namespace se
 	template<typename T, typename... Args>
 	ComponentHandle<T> Entity::assign(Args&&... args)
 	{
-		using ComponentAllocator = std::allocator_traits<World::EntityAllocator>::template rebind_alloc<se_internal::ComponentContainer<T>>;
+		using ComponentAllocator = std::allocator_traits<Level::EntityAllocator>::template rebind_alloc<se_internal::ComponentContainer<T>>;
 
 		auto found = components.find(getTypeIndex<T>());
 		if (found != components.end())
@@ -674,12 +670,12 @@ namespace se
 			container->data = T(args...);
 
 			auto handle = ComponentHandle<T>(&container->data);
-			world->emit<Events::OnComponentAssigned<T>>({ this, handle });
+			Level->emit<Events::OnComponentAssigned<T>>({ this, handle });
 			return handle;
 		}
 		else
 		{
-			ComponentAllocator alloc(world->getPrimaryAllocator());
+			ComponentAllocator alloc(Level->getPrimaryAllocator());
 
 			se_internal::ComponentContainer<T>* container = std::allocator_traits<ComponentAllocator>::allocate(alloc, 1);
 			std::allocator_traits<ComponentAllocator>::construct(alloc, container, T(args...));
@@ -687,7 +683,7 @@ namespace se
 			components.insert({ getTypeIndex<T>(), container });
 
 			auto handle = ComponentHandle<T>(&container->data);
-			world->emit<Events::OnComponentAssigned<T>>({ this, handle });
+			Level->emit<Events::OnComponentAssigned<T>>({ this, handle });
 			return handle;
 		}
 	}
@@ -706,66 +702,66 @@ namespace se
 
 	namespace se_internal
 	{
-		inline EntityIterator::EntityIterator(class World* world, size_t index, bool bIsEnd, bool bIncludePendingDestroy)
-			: bIsEnd(bIsEnd), index(index), world(world), bIncludePendingDestroy(bIncludePendingDestroy)
+		inline EntityIterator::EntityIterator(class Level* Level, size_t index, bool bIsEnd, bool bIncludePendingDestroy)
+			: bIsEnd(bIsEnd), index(index), Level(Level), bIncludePendingDestroy(bIncludePendingDestroy)
 		{
-			if (index >= world->getCount())
+			if (index >= Level->getCount())
 				this->bIsEnd = true;
 		}
 
-		inline bool EntityIterator::isEnd() const { return bIsEnd || index >= world->getCount(); }
+		inline bool EntityIterator::isEnd() const { return bIsEnd || index >= Level->getCount(); }
 
 		inline Entity* EntityIterator::get() const
 		{
 			if (isEnd())
 				return nullptr;
 
-			return world->getByIndex(index);
+			return Level->getByIndex(index);
 		}
 
 		inline EntityIterator& EntityIterator::operator++()
 		{
 			++index;
-			while (index < world->getCount() && (get() == nullptr || (get()->isPendingDestroy() && !bIncludePendingDestroy)))
+			while (index < Level->getCount() && (get() == nullptr || (get()->isPendingDestroy() && !bIncludePendingDestroy)))
 			{
 				++index;
 			}
 
-			if (index >= world->getCount())
+			if (index >= Level->getCount())
 				bIsEnd = true;
 
 			return *this;
 		}
 
 		template<typename... Types>
-		EntityComponentIterator<Types...>::EntityComponentIterator(World* world, size_t index, bool bIsEnd, bool bIncludePendingDestroy)
-			: bIsEnd(bIsEnd), index(index), world(world), bIncludePendingDestroy(bIncludePendingDestroy)
+		EntityComponentIterator<Types...>::EntityComponentIterator(Level* level, size_t index, bool bIsEnd, bool bIncludePendingDestroy)
+			: bIsEnd(bIsEnd), index(index), level(level), bIncludePendingDestroy(bIncludePendingDestroy)
 		{
-			if (index >= world->getCount())
+			if (index >= level->getCount())
 				this->bIsEnd = true;
 		}
 
 		template<typename... Types>
-		bool EntityComponentIterator<Types...>::isEnd() const { return bIsEnd || index >= world->getCount(); }
+		bool EntityComponentIterator<Types...>::isEnd() const { return bIsEnd || index >= level->getCount(); }
 
 		template<typename... Types>
 		Entity* EntityComponentIterator<Types...>::get() const
 		{
 			if (isEnd()) return nullptr;
 
-			return world->getByIndex(index);
+			return level->getByIndex(index);
 		}
 
 		template<typename... Types>
 		EntityComponentIterator<Types...>& EntityComponentIterator<Types...>::operator++()
 		{
 			++index;
-			while (index < world->getCount() && (get() == nullptr || !get()->template has<Types...>() || (get()->isPendingDestroy() && !bIncludePendingDestroy)))
+			while (index < level->getCount() && (get() == nullptr || !get()->template has<Types...>() || (get()->isPendingDestroy() && !bIncludePendingDestroy)))
 			{
 				++index;
 			}
 
-			if (index >= world->getCount())
+			if (index >= level->getCount())
 				bIsEnd = true;
 
 			return *this;
