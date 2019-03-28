@@ -23,7 +23,6 @@
 //	}
 //};
 
-
 int main()
 {
 #ifdef WIN32

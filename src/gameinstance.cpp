@@ -1,22 +1,14 @@
 #include "se/gameinstance.h"
 
-#include <iostream>
-template<typename T>
-class TestEventHandler : public se::EventSubscriber<T>
-{
-public:
-	void receive(se::Level* Level, const T& e) {
-		if(e.action == 0) std::cout << "Received event! " << char('a' + e.key - 'a') << "\n"; ;
-	}
-};
+#include "se/systems/renderingsystem.h"
 
 namespace se
 {
 	GameInstance::GameInstance(const std::string& Title, int Width, int Height)
-		: wm(Title, Width, Height), running_(true), systemUse_(se::Level::createLevel())
+		: wm_(Title, Width, Height), running_(true), systemUse_(se::Level::createLevel())
 	{
 		systemUse_->subscribe<events::LevelEvent>(this);
-		systemUse_->subscribe<events::LevelEvent>(&wm);
+		systemUse_->subscribe<events::LevelEvent>(&wm_);
 	}
 
 	void GameInstance::run()
@@ -24,18 +16,16 @@ namespace se
 		events::LevelEvent e{ se::Level::createLevel() };
 		systemUse_->emit<events::LevelEvent>(e);
 
-		TestEventHandler<events::KeyEvent> testHandler;
-		level_->subscribe<events::KeyEvent>(&testHandler);
-		
+		se::Entity* entity = level_->create();
+		entity->assign<vertex>();
+
 		while (running_)
 		{
-			//Tick Systems
+			level_->tick(1.f);
 
 			//Render to Screen
 
-			//Input
-
-			wm.run(); //TODO: WM shouldn't have a run loop
+			wm_.swap();
 		}
 	}
 

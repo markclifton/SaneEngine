@@ -20,11 +20,11 @@ namespace se
 
 		virtual void run();
 
-		void receive(se::Level*, const events::Shutdown&);
-		void receive(se::Level*, const events::LevelEvent& e);
+	protected:
+		virtual void receive(se::Level*, const events::Shutdown&);
+		virtual void receive(se::Level*, const events::LevelEvent& e);
 
-	private:
-		managers::WindowManager wm;
+		managers::WindowManager wm_;
 		bool running_{ false };
 		se::Level* systemUse_{ nullptr };
 		se::Level* level_{ nullptr };

@@ -37,11 +37,13 @@ namespace se
 			int w_, h_;
 
 			se::Level* level_{ nullptr };
+			
+			GLuint vao_{ 0 };
 		public:
 			WindowManager(const std::string& title, int width, int height);
 			~WindowManager();
 
-			void run(); //this is temp
+			void swap();
 
 			bool create();
 			void destroy();
