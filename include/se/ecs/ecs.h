@@ -2,6 +2,7 @@
 #define ECS_H
 
 #include "se/utils/dlldefines.h"
+#include "se/events/general.h"
 
 #include <unordered_map>
 #include <functional>
@@ -138,33 +139,6 @@ namespace se
 		virtual void receive(Level* Level, const T& event) = 0;
 	};
 
-	namespace Events
-	{
-		struct OnEntityCreated
-		{
-			Entity* entity;
-		};
-
-		struct OnEntityDestroyed
-		{
-			Entity* entity;
-		};
-
-		template<typename T>
-		struct OnComponentAssigned
-		{
-			Entity* entity;
-			ComponentHandle<T> component;
-		};
-
-		template<typename T>
-		struct OnComponentRemoved
-		{
-			Entity* entity;
-			ComponentHandle<T> component;
-		};
-	}
-
 	class Level
 	{
 	public:
@@ -211,7 +185,7 @@ namespace se
 			std::allocator_traits<EntityAllocator>::construct(entAlloc, ent, this, lastEntityId);
 			entities.push_back(ent);
 
-			emit<Events::OnEntityCreated>({ ent });
+			emit<events::OnEntityCreated>({ ent });
 
 			return ent;
 		}
@@ -531,7 +505,7 @@ namespace se
 			virtual void removed(Entity* ent)
 			{
 				auto handle = ComponentHandle<T>(&data);
-				ent->getLevel()->emit<Events::OnComponentRemoved<T>>({ ent, handle });
+				ent->getLevel()->emit<events::OnComponentRemoved<T>>({ ent, handle });
 			}
 		};
 	}
@@ -543,7 +517,7 @@ namespace se
 			if (!ent->isPendingDestroy())
 			{
 				ent->bPendingDestroy = true;
-				emit<Events::OnEntityDestroyed>({ ent });
+				emit<events::OnEntityDestroyed>({ ent });
 			}
 
 			std::allocator_traits<EntityAllocator>::destroy(entAlloc, ent);
@@ -575,7 +549,7 @@ namespace se
 
 		ent->bPendingDestroy = true;
 
-		emit<Events::OnEntityDestroyed>({ ent });
+		emit<events::OnEntityDestroyed>({ ent });
 
 		if (immediate)
 		{
@@ -610,7 +584,7 @@ namespace se
 			if (!ent->isPendingDestroy())
 			{
 				ent->bPendingDestroy = true;
-				emit<Events::OnEntityDestroyed>({ ent });
+				emit<events::OnEntityDestroyed>({ ent });
 			}
 			std::allocator_traits<EntityAllocator>::destroy(entAlloc, ent);
 			std::allocator_traits<EntityAllocator>::deallocate(entAlloc, ent, 1);
@@ -670,7 +644,7 @@ namespace se
 			container->data = T(args...);
 
 			auto handle = ComponentHandle<T>(&container->data);
-			Level->emit<Events::OnComponentAssigned<T>>({ this, handle });
+			Level->emit<events::OnComponentAssigned<T>>({ this, handle });
 			return handle;
 		}
 		else
@@ -683,7 +657,7 @@ namespace se
 			components.insert({ getTypeIndex<T>(), container });
 
 			auto handle = ComponentHandle<T>(&container->data);
-			Level->emit<Events::OnComponentAssigned<T>>({ this, handle });
+			Level->emit<events::OnComponentAssigned<T>>({ this, handle });
 			return handle;
 		}
 	}
